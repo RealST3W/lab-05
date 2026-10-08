@@ -1,5 +1,6 @@
 package com.example.listycity
 
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,6 +34,7 @@ fun CityListScreen(
     cities: List<City>,
     onAddCity: (City) -> Unit,
     onUpdateCity: (City, City) -> Unit,
+    onDeleteCity: (City) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var newCityName by remember { mutableStateOf("") }
@@ -40,12 +43,25 @@ fun CityListScreen(
     var selectedCity by remember { mutableStateOf<City?>(null) }
     var editedCityName by remember { mutableStateOf("") }
     var editedProvinceName by remember { mutableStateOf("") }
+    var isClicked by remember{ mutableStateOf(false)}
+    var selectedDeleteCity by remember { mutableStateOf<City?>(null) }
+    var deleteButtonText by remember { mutableStateOf("Delete City") }
+
 
     Column(modifier = modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
+            // Puts text on the screen to let user know to click a name.
+            if (isClicked == true) {
+                Text(
+                    text = ("Click A City"),
+                    modifier = Modifier.padding(horizontal = 50.dp, vertical = 25.dp),
+                    fontSize = 30.sp,
+
+                    )
+            }
             FloatingActionButton(
                 modifier = Modifier.padding(16.dp),
                 onClick = {
@@ -104,7 +120,7 @@ fun CityListScreen(
                 }
             }
         }
-        if (selectedCity != null) {
+        if (selectedCity != null && isClicked == false) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -155,7 +171,7 @@ fun CityListScreen(
                 }
             }
         }
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.fillMaxSize().weight(1f)) {
             itemsIndexed(cities) { index, city ->
                 CityRow(
                     city = city,
@@ -163,7 +179,13 @@ fun CityListScreen(
                         showAddCityFields = false
                         newCityName = ""
                         newProvinceName = ""
-                        selectedCity = city
+                        if (isClicked == false) {
+                            selectedCity = city
+                        }
+                        if (isClicked == true) {
+                            selectedDeleteCity = city
+                            deleteButtonText = "Confirm"
+                        }
                         editedCityName = city.name
                         editedProvinceName = city.province
                     }
@@ -173,10 +195,30 @@ fun CityListScreen(
                 }
             }
         }
+
+        // Button that does the Deleting
+        Button(
+            // Puts button at the end
+            modifier = Modifier.align(Alignment.End).padding(16.dp),
+            onClick = {
+                isClicked = true
+                val cityToDelete = selectedDeleteCity
+                if (cityToDelete != null){
+                    onDeleteCity(
+                        cityToDelete
+                    )
+                    selectedDeleteCity = null
+                    deleteButtonText = "DELETE CITY"
+                    isClicked = false
+                    editedCityName = ""
+                    editedProvinceName = ""
+                }
+            }
+        ){
+            Text(deleteButtonText)
+        }
     }
 }
-
-
 @Composable
 fun CityRow(
     city: City,
@@ -213,7 +255,8 @@ fun CityListScreenPreview() {
                 City("Calgary", "AB")
             ),
             onAddCity = {},
-            onUpdateCity = { _, _ -> }
+            onUpdateCity = { _, _ -> },
+            onDeleteCity = {}
         )
     }
 }
